@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15色投票アプリ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- フェーズ 1: カラー選択 -->
+        <section id="selection-phase" class="phase">
+            <header>
+                <h1>カラー選択</h1>
+                <p>以下の18色の中から、お好きな15色を選んでください。</p>
+                <div class="counter-container">
+                    選択数: <span id="selection-count">0</span> / 15
+                </div>
+            </header>
+            <div id="color-grid-selection" class="color-grid"></div>
+            <div class="actions">
+                <button id="proceed-btn" disabled>投票画面に進む</button>
+            </div>
+        </section>
+
+        <!-- フェーズ 2: 投票 -->
+        <section id="voting-phase" class="phase hidden">
+            <header>
+                <h1 id="round-title">第1回 投票画面</h1>
+                <p>モードを選んだあと、色をクリックしてください。</p>
+                <div class="mode-selector">
+                    <button id="mode-like" class="mode-btn active">好き (Like)</button>
+                    <button id="mode-dislike" class="mode-btn">嫌い (Dislike)</button>
+                    <button id="mode-no" class="mode-btn">ダメ (No)</button>
+                </div>
+            </header>
+            <div id="color-grid-voting" class="color-grid"></div>
+            <div class="actions secondary">
+                <button id="prev-round-btn">前の回へ戻る</button>
+                <button id="next-round-btn">次の回へ進む</button>
+                <button id="reset-btn" class="danger">最初からやり直す</button>
+                <button id="clear-votes-btn">この回の投票をクリア</button>
+            </div>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

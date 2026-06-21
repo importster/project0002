@@ -96,10 +96,34 @@ function handleVote(targetId) {
     } else if (state.voteMode === 'no' || state.voteMode === 'fit' || state.voteMode === 'not-fit') {
         if (state.sourceColorId) {
             const tagValue = state.voteMode;
-            if (round[targetId].tags[state.sourceColorId] === tagValue) {
-                delete round[targetId].tags[state.sourceColorId];
+            
+            // Ensure tags[sourceColorId] is an array (with migration path from old string state)
+            if (!round[targetId].tags[state.sourceColorId]) {
+                round[targetId].tags[state.sourceColorId] = [];
+            } else if (!Array.isArray(round[targetId].tags[state.sourceColorId])) {
+                round[targetId].tags[state.sourceColorId] = [round[targetId].tags[state.sourceColorId]];
+            }
+
+            const arr = round[targetId].tags[state.sourceColorId];
+            const idx = arr.indexOf(tagValue);
+
+            if (idx > -1) {
+                arr.splice(idx, 1);
             } else {
-                round[targetId].tags[state.sourceColorId] = tagValue;
+                // Mutual exclusivity check: 'fit' and 'not-fit' should not overlap
+                if (tagValue === 'fit') {
+                    const notFitIdx = arr.indexOf('not-fit');
+                    if (notFitIdx > -1) arr.splice(notFitIdx, 1);
+                } else if (tagValue === 'not-fit') {
+                    const fitIdx = arr.indexOf('fit');
+                    if (fitIdx > -1) arr.splice(fitIdx, 1);
+                }
+                arr.push(tagValue);
+            }
+
+            // Clean up empty tag array
+            if (arr.length === 0) {
+                delete round[targetId].tags[state.sourceColorId];
             }
         }
     }
@@ -236,12 +260,19 @@ function renderVotingGrid() {
         let tagsHtml = '<div class="tag-list">';
         Object.keys(data.tags).forEach(sourceId => {
             const sourceColor = COLORS.find(c => c.id === sourceId);
-            const type = data.tags[sourceId];
-            let label = '';
-            if (type === 'fit') label = '→合';
-            else if (type === 'not-fit') label = '→不';
-            else if (type === 'no') label = '→×';
-            tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${label}</div>`;
+            if (!sourceColor) return;
+
+            const values = Array.isArray(data.tags[sourceId])
+                ? data.tags[sourceId]
+                : [data.tags[sourceId]]; // support old string format if any
+
+            values.forEach(type => {
+                let label = '';
+                if (type === 'fit') label = '→合';
+                else if (type === 'not-fit') label = '→不';
+                else if (type === 'no') label = '→×';
+                tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${label}</div>`;
+            });
         });
         tagsHtml += '</div>';
 

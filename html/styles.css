@@ -162,6 +162,7 @@ header {
 
 .tag.fit { border-left: 3px solid var(--fit-color); }
 .tag.not-fit { border-left: 3px solid var(--not-fit-color); }
+.tag.no { border-left: 3px solid var(--no-color); }
 
 /* モード切替 */
 .mode-selector {

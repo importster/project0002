@@ -22,7 +22,7 @@ const COLORS = [
 let state = {
     discardedIds: [], // Phase 1: 3 colors to remove
     selectedIds: [],  // The 15 colors to keep
-    rounds: [{}],     // { colorId: { vote, no, tags: { sourceColorId: 'fit'|'not-fit' } } }
+    rounds: [{}],     // { colorId: { vote, tags: { sourceColorId: 'fit'|'not-fit'|'no' } } }
     currentRoundIndex: 0,
     phase: 'selection',
     voteMode: 'like',
@@ -89,15 +89,13 @@ function proceedToVoting() {
 
 function handleVote(targetId) {
     const round = state.rounds[state.currentRoundIndex];
-    if (!round[targetId]) round[targetId] = { vote: null, no: false, tags: {} };
+    if (!round[targetId]) round[targetId] = { vote: null, tags: {} };
 
     if (state.voteMode === 'like' || state.voteMode === 'dislike') {
         round[targetId].vote = (round[targetId].vote === state.voteMode) ? null : state.voteMode;
-    } else if (state.voteMode === 'no') {
-        round[targetId].no = !round[targetId].no;
-    } else if (state.voteMode === 'fit' || state.voteMode === 'not-fit') {
+    } else if (state.voteMode === 'no' || state.voteMode === 'fit' || state.voteMode === 'not-fit') {
         if (state.sourceColorId) {
-            const tagValue = (state.voteMode === 'fit') ? 'fit' : 'not-fit';
+            const tagValue = state.voteMode;
             if (round[targetId].tags[state.sourceColorId] === tagValue) {
                 delete round[targetId].tags[state.sourceColorId];
             } else {
@@ -117,7 +115,7 @@ function selectSourceColor(id) {
 
 function setVoteMode(mode) {
     state.voteMode = mode;
-    if (mode !== 'fit' && mode !== 'not-fit') {
+    if (mode === 'like' || mode === 'dislike') {
         state.sourceColorId = null;
     }
     saveState();
@@ -187,15 +185,20 @@ function render() {
 }
 
 function updateStatusBar() {
-    if (state.voteMode === 'fit' || state.voteMode === 'not-fit') {
+    const isTagMode = state.voteMode === 'fit' || state.voteMode === 'not-fit' || state.voteMode === 'no';
+    if (isTagMode) {
         if (!state.sourceColorId) {
             statusBar.textContent = '左のリストから元の色（ソース）を選んでください';
         } else {
             const sourceColor = COLORS.find(c => c.id === state.sourceColorId);
-            statusBar.textContent = `[${sourceColor.name}] に対して ${state.voteMode === 'fit' ? '合う' : '合わない'} 色を中央から選んでください`;
+            let modeName = '';
+            if (state.voteMode === 'fit') modeName = '合う';
+            else if (state.voteMode === 'not-fit') modeName = '合わない';
+            else if (state.voteMode === 'no') modeName = 'ダメ';
+            statusBar.textContent = `[${sourceColor.name}] に対して ${modeName} 色を中央から選んでください`;
         }
     } else {
-        statusBar.textContent = `${state.voteMode === 'like' ? '好き' : state.voteMode === 'dislike' ? '嫌い' : 'ダメ'} モード実行中：中央の色をクリックしてください`;
+        statusBar.textContent = `${state.voteMode === 'like' ? '好き' : '嫌い'} モード：中央の色をクリックしてください`;
     }
 }
 
@@ -219,7 +222,7 @@ function renderVotingGrid() {
     const selectedColors = COLORS.filter(c => state.selectedIds.includes(c.id));
     
     selectedColors.forEach(color => {
-        const data = round[color.id] || { vote: null, no: false, tags: {} };
+        const data = round[color.id] || { vote: null, tags: {} };
         const card = document.createElement('div');
         card.className = 'color-card';
         
@@ -227,7 +230,6 @@ function renderVotingGrid() {
         let badgesHtml = '<div class="badge-container">';
         if (data.vote === 'like') badgesHtml += '<div class="vote-badge">❤️</div>';
         if (data.vote === 'dislike') badgesHtml += '<div class="vote-badge">💔</div>';
-        if (data.no) badgesHtml += '<div class="vote-badge">✖</div>';
         badgesHtml += '</div>';
 
         // タグ
@@ -235,7 +237,11 @@ function renderVotingGrid() {
         Object.keys(data.tags).forEach(sourceId => {
             const sourceColor = COLORS.find(c => c.id === sourceId);
             const type = data.tags[sourceId];
-            tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${type === 'fit' ? '→合' : '→×'}</div>`;
+            let label = '';
+            if (type === 'fit') label = '→合';
+            else if (type === 'not-fit') label = '→不';
+            else if (type === 'no') label = '→×';
+            tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${label}</div>`;
         });
         tagsHtml += '</div>';
 

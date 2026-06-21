@@ -8,13 +8,12 @@
 </head>
 <body>
     <div id="app" class="container-fluid">
-        <!-- フェーズ 1: カラー選択 -->
         <section id="selection-phase" class="phase">
             <header>
                 <h1>カラー選択</h1>
                 <p>以下の18色の中から、<strong>いらない3色</strong>を選んでください。</p>
                 <div class="counter-container">
-                    除外数: <span id="selection-count">0</span> / 3
+                    死亡数: <span id="selection-count">0</span> / 3
                 </div>
             </header>
             <div id="color-grid-selection" class="color-grid"></div>
@@ -23,27 +22,39 @@
             </div>
         </section>
 
-        <!-- フェーズ 2: 投票 -->
         <section id="voting-phase" class="phase hidden">
             <div class="main-layout">
-                <!-- 左サイドバー: タグソース用 -->
                 <aside class="sidebar left-sidebar">
                     <h3>タグソース</h3>
                     <div id="source-color-list" class="source-list"></div>
                 </aside>
 
-                <!-- 中央: メイン投票エリア -->
                 <main class="content-area">
                     <header>
                         <h1 id="round-title">第1回 投票画面</h1>
-                        <div class="mode-selector">
-                            <button id="mode-like" class="mode-btn active">好き (Like)</button>
-                            <button id="mode-dislike" class="mode-btn">嫌い (Dislike)</button>
-                            <button id="mode-no" class="mode-btn">ダメ (No)</button>
-                            <button id="mode-fit" class="mode-btn">合う (Fit)</button>
-                            <button id="mode-not-fit" class="mode-btn">合わない (Not Fit)</button>
+                        
+                        <div class="mode-container">
+                            <div class="mode-selector">
+                                <button id="mode-preference-toggle" class="mode-btn">役職▼</button>
+                                <button id="mode-usedbutton" class="mode-btn">ボタン使用</button>
+                                <button id="mode-ejected" class="mode-btn">追放</button>
+                                <button id="mode-death" class="mode-btn">死亡</button>
+                                <button id="mode-nokill" class="mode-btn">キル無理</button>
+                                <!-- <button id="mode-not-fit" class="mode-btn">合わない (Not Fit)</button> -->
+                            </div>
+                            
+                            <!-- 好みボタンを押したときに展開するサブパネル -->
+                            <div id="preference-sub-panel" class="preference-sub-panel hidden">
+                                <button id="mode-haverole" class="sub-mode-btn">役職持ち</button>
+                                <button id="mode-engineer" class="sub-mode-btn">エンジニア</button>
+                                <button id="mode-scientist" class="sub-mode-btn">科学者</button>
+                                <button id="mode-detective" class="sub-mode-btn">探偵</button>
+                                <button id="mode-tracker" class="sub-mode-btn">トラッカー</button>
+                                <button id="mode-noisemaker" class="sub-mode-btn">ノイズメーカー</button>
+                            </div>
                         </div>
-                        <div id="status-bar" class="status-bar">モードを選択してください</div>
+                    
+                        <!-- <div id="status-bar" class="status-bar">モードを選択してください</div> -->
                     </header>
                     <div id="color-grid-voting" class="color-grid"></div>
                     <div class="actions secondary">
@@ -53,7 +64,6 @@
                     </div>
                 </main>
 
-                <!-- 右サイドバー: ラウンドメニュー -->
                 <aside class="sidebar right-sidebar">
                     <h3>ラウンドメニュー</h3>
                     <div id="round-menu" class="round-menu"></div>

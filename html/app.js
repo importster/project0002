@@ -94,17 +94,19 @@ function handleVote(targetId) {
     if (state.voteMode === 'like' || state.voteMode === 'dislike') {
         round[targetId].vote = (round[targetId].vote === state.voteMode) ? null : state.voteMode;
     } else if (state.voteMode === 'no' || state.voteMode === 'fit' || state.voteMode === 'not-fit') {
-        if (state.sourceColorId) {
+        const sourceId = (state.voteMode === 'no') ? (state.sourceColorId || 'global') : state.sourceColorId;
+        
+        if (sourceId) {
             const tagValue = state.voteMode;
             
             // Ensure tags[sourceColorId] is an array (with migration path from old string state)
-            if (!round[targetId].tags[state.sourceColorId]) {
-                round[targetId].tags[state.sourceColorId] = [];
-            } else if (!Array.isArray(round[targetId].tags[state.sourceColorId])) {
-                round[targetId].tags[state.sourceColorId] = [round[targetId].tags[state.sourceColorId]];
+            if (!round[targetId].tags[sourceId]) {
+                round[targetId].tags[sourceId] = [];
+            } else if (!Array.isArray(round[targetId].tags[sourceId])) {
+                round[targetId].tags[sourceId] = [round[targetId].tags[sourceId]];
             }
 
-            const arr = round[targetId].tags[state.sourceColorId];
+            const arr = round[targetId].tags[sourceId];
             const idx = arr.indexOf(tagValue);
 
             if (idx > -1) {
@@ -123,7 +125,7 @@ function handleVote(targetId) {
 
             // Clean up empty tag array
             if (arr.length === 0) {
-                delete round[targetId].tags[state.sourceColorId];
+                delete round[targetId].tags[sourceId];
             }
         }
     }
@@ -211,15 +213,20 @@ function render() {
 function updateStatusBar() {
     const isTagMode = state.voteMode === 'fit' || state.voteMode === 'not-fit' || state.voteMode === 'no';
     if (isTagMode) {
-        if (!state.sourceColorId) {
-            statusBar.textContent = '左のリストから元の色（ソース）を選んでください';
+        if (state.voteMode === 'no') {
+            if (!state.sourceColorId) {
+                statusBar.textContent = 'ダメ モード：中央の色をクリックして単体の「ダメ ✖」タグを付与します（左の色を選択すると相性タグになります）';
+            } else {
+                const sourceColor = COLORS.find(c => c.id === state.sourceColorId);
+                statusBar.textContent = `[${sourceColor.name}] に対して ダメ（✖）な色を中央から選んでください`;
+            }
         } else {
-            const sourceColor = COLORS.find(c => c.id === state.sourceColorId);
-            let modeName = '';
-            if (state.voteMode === 'fit') modeName = '合う';
-            else if (state.voteMode === 'not-fit') modeName = '合わない';
-            else if (state.voteMode === 'no') modeName = 'ダメ';
-            statusBar.textContent = `[${sourceColor.name}] に対して ${modeName} 色を中央から選んでください`;
+            if (!state.sourceColorId) {
+                statusBar.textContent = '左のリストから元の色（ソース）を選んでください';
+            } else {
+                const sourceColor = COLORS.find(c => c.id === state.sourceColorId);
+                statusBar.textContent = `[${sourceColor.name}] に対して ${state.voteMode === 'fit' ? '合う' : '合わない'} 色を中央から選んでください`;
+            }
         }
     } else {
         statusBar.textContent = `${state.voteMode === 'like' ? '好き' : '嫌い'} モード：中央の色をクリックしてください`;
@@ -260,7 +267,7 @@ function renderVotingGrid() {
         let tagsHtml = '<div class="tag-list">';
         Object.keys(data.tags).forEach(sourceId => {
             const sourceColor = COLORS.find(c => c.id === sourceId);
-            if (!sourceColor) return;
+            if (!sourceColor && sourceId !== 'global') return;
 
             const values = Array.isArray(data.tags[sourceId])
                 ? data.tags[sourceId]
@@ -271,7 +278,12 @@ function renderVotingGrid() {
                 if (type === 'fit') label = '→合';
                 else if (type === 'not-fit') label = '→不';
                 else if (type === 'no') label = '→×';
-                tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${label}</div>`;
+                
+                if (sourceId === 'global') {
+                    tagsHtml += `<div class="tag ${type}">ダメ ✖</div>`;
+                } else if (sourceColor) {
+                    tagsHtml += `<div class="tag ${type}">${sourceColor.name} ${label}</div>`;
+                }
             });
         });
         tagsHtml += '</div>';
